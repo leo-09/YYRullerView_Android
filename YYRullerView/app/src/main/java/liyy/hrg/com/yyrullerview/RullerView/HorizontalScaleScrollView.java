@@ -9,11 +9,8 @@ import android.view.MotionEvent;
 import android.view.ViewGroup;
 
 /**
- * 水平滚动刻度尺
- *
- * @author LichFaker on 16/3/4.
- * @Email lichfaker@gmail.com
- */
+ * 水平的 自定义时间轴/可滑动标尺
+ * */
 public class HorizontalScaleScrollView extends BaseScaleView {
 
     public HorizontalScaleScrollView(Context context) {
@@ -45,7 +42,7 @@ public class HorizontalScaleScrollView extends BaseScaleView {
 
     @Override
     protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
-        int height=MeasureSpec.makeMeasureSpec(mRectHeight, MeasureSpec.AT_MOST);
+        int height = MeasureSpec.makeMeasureSpec(mRectHeight, MeasureSpec.AT_MOST);
         super.onMeasure(widthMeasureSpec, height);
         mScaleScrollViewRange = getMeasuredWidth();
         mTempScale = mScaleScrollViewRange / mScaleMargin / 2 + mMin;
@@ -59,7 +56,6 @@ public class HorizontalScaleScrollView extends BaseScaleView {
 
     @Override
     protected void onDrawScale(Canvas canvas, Paint paint) {
-
         paint.setTextSize(mRectHeight / 4);
 
         for (int i = 0, k = mMin; i <= mMax - mMin; i++) {
@@ -72,23 +68,21 @@ public class HorizontalScaleScrollView extends BaseScaleView {
                 canvas.drawLine(i * mScaleMargin, mRectHeight, i * mScaleMargin, mRectHeight - mScaleHeight, paint);
             }
         }
-
     }
 
     @Override
     protected void onDrawPointer(Canvas canvas, Paint paint) {
-
         paint.setColor(Color.RED);
 
-        //每一屏幕刻度的个数/2
+        // 每一屏幕刻度的个数/2
         int countScale = mScaleScrollViewRange / mScaleMargin / 2;
-        //根据滑动的距离，计算指针的位置【指针始终位于屏幕中间】
+        // 根据滑动的距离，计算指针的位置【指针始终位于屏幕中间】
         int finalX = mScroller.getFinalX();
-        //滑动的刻度
-        int tmpCountScale = (int) Math.rint((double) finalX / (double) mScaleMargin); //四舍五入取整
-        //总刻度
+        // 滑动的刻度（四舍五入取整）
+        int tmpCountScale = (int) Math.rint((double) finalX / (double) mScaleMargin);
+        // 总刻度
         mCountScale = tmpCountScale + countScale + mMin;
-        if (mScrollListener != null) { //回调方法
+        if (mScrollListener != null) { // 回调方法
             mScrollListener.onScaleScroll(mCountScale);
         }
         canvas.drawLine(countScale * mScaleMargin + finalX, mRectHeight,
@@ -116,11 +110,11 @@ public class HorizontalScaleScrollView extends BaseScaleView {
                 return true;
             case MotionEvent.ACTION_MOVE:
                 int dataX = mScrollLastX - x;
-                if (mCountScale - mTempScale < 0) { //向右边滑动
-                    if (mCountScale <= mMin && dataX <= 0) //禁止继续向右滑动
+                if (mCountScale - mTempScale < 0) {         // 向右边滑动
+                    if (mCountScale <= mMin && dataX <= 0)  // 禁止继续向右滑动
                         return super.onTouchEvent(event);
-                } else if (mCountScale - mTempScale > 0) { //向左边滑动
-                    if (mCountScale >= mMax && dataX >= 0) //禁止继续向左滑动
+                } else if (mCountScale - mTempScale > 0) {  // 向左边滑动
+                    if (mCountScale >= mMax && dataX >= 0)  // 禁止继续向左滑动
                         return super.onTouchEvent(event);
                 }
                 smoothScrollBy(dataX, 0);
@@ -132,11 +126,11 @@ public class HorizontalScaleScrollView extends BaseScaleView {
                 if (mCountScale < mMin) mCountScale = mMin;
                 if (mCountScale > mMax) mCountScale = mMax;
                 int finalX = (mCountScale - mMidCountScale) * mScaleMargin;
-                mScroller.setFinalX(finalX); //纠正指针位置
+                mScroller.setFinalX(finalX); // 纠正指针位置
                 postInvalidate();
                 return true;
         }
+
         return super.onTouchEvent(event);
     }
-
 }

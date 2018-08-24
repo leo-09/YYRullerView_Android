@@ -15,9 +15,8 @@ import android.widget.Scroller;
 import liyy.hrg.com.yyrullerview.R;
 
 /**
- * @author LichFaker on 16/3/12.
- * @Email lichfaker@gmail.com
- */
+ * 可滑动标尺
+ * */
 public abstract class BaseScaleView extends View {
 
     public static final int[] ATTR = {
@@ -33,24 +32,24 @@ public abstract class BaseScaleView extends View {
     public static final @StyleableRes int LF_SCALE_HEIGHT = 3;
     public static final @StyleableRes int LF_SCALE_CURRENT = 4;
 
-    protected int mMax; //最大刻度
-    protected int mMin; // 最小刻度
-    protected int mCountScale; //滑动的总刻度
+    protected int mMax;         // 最大刻度
+    protected int mMin;         // 最小刻度
+    protected int mCountScale;  // 滑动的总刻度
 
     protected int mScaleScrollViewRange;
 
-    protected int mScaleMargin; //刻度间距
-    protected int mScaleHeight; //刻度线的高度
-    protected int mScaleMaxHeight; //整刻度线高度
+    protected int mScaleMargin;     // 刻度间距
+    protected int mScaleHeight;     // 刻度线的高度
+    protected int mScaleMaxHeight;  // 整刻度线高度
 
-    protected int mRectWidth; //总宽度
-    protected int mRectHeight; //高度
+    protected int mRectWidth;       // 总宽度
+    protected int mRectHeight;      // 高度
 
     protected Scroller mScroller;
     protected int mScrollLastX;
 
-    protected int mTempScale; // 用于判断滑动方向
-    protected int mMidCountScale; //中间刻度
+    protected int mTempScale;       // 用于判断滑动方向
+    protected int mMidCountScale;   // 中间刻度
 
     protected OnScrollListener mScrollListener;
 
@@ -108,8 +107,8 @@ public abstract class BaseScaleView extends View {
         paint.setTextAlign(Paint.Align.CENTER);
 
         onDrawLine(canvas, paint);
-        onDrawScale(canvas, paint); //画刻度
-        onDrawPointer(canvas, paint); //画指针
+        onDrawScale(canvas, paint);     // 画刻度
+        onDrawPointer(canvas, paint);   // 画指针
 
         super.onDraw(canvas);
     }

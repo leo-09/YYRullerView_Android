@@ -11,9 +11,8 @@ import android.view.MotionEvent;
 import android.view.ViewGroup;
 
 /**
- * @author LichFaker on 16/3/12.
- * @Email lichfaker@gmail.com
- */
+ * 竖直的 自定义时间轴/可滑动标尺
+ * */
 public class VerticalScaleScrollView extends BaseScaleView {
 
     public VerticalScaleScrollView(Context context) {
@@ -63,9 +62,9 @@ public class VerticalScaleScrollView extends BaseScaleView {
         paint.setTextSize(mRectWidth / 4);
 
         for (int i = 0, k = mMin; i <= mMax - mMin; i++) {
-            if (i % 10 == 0) { //整值
+            if (i % 10 == 0) { // 整值
                 canvas.drawLine(0, i * mScaleMargin, mScaleMaxHeight, i * mScaleMargin, paint);
-                //整值文字
+                // 整值文字
                 canvas.drawText(String.valueOf(k), mScaleMaxHeight + 40, i * mScaleMargin + paint.getTextSize() / 3, paint);
                 k += 10;
             } else {
@@ -79,20 +78,20 @@ public class VerticalScaleScrollView extends BaseScaleView {
 
         paint.setColor(Color.RED);
 
-        //每一屏幕刻度的个数/2
+        // 每一屏幕刻度的个数/2
         int countScale = mScaleScrollViewRange / mScaleMargin / 2;
-        //根据滑动的距离，计算指针的位置【指针始终位于屏幕中间】
+        // 根据滑动的距离，计算指针的位置【指针始终位于屏幕中间】
         int finalY = mScroller.getFinalY();
-        //滑动的刻度
-        int tmpCountScale = (int) Math.rint((double) finalY / (double) mScaleMargin); //四舍五入取整
-        //总刻度
+        // 滑动的刻度（四舍五入取整）
+        int tmpCountScale = (int) Math.rint((double) finalY / (double) mScaleMargin);
+        // 总刻度
         mCountScale = tmpCountScale + countScale + mMin;
-        if (mScrollListener != null) { //回调方法
+        if (mScrollListener != null) { // 回调方法
             mScrollListener.onScaleScroll(mCountScale);
         }
+
         canvas.drawLine(0, countScale * mScaleMargin + finalY,
                 mScaleMaxHeight + mScaleHeight, countScale * mScaleMargin + finalY, paint);
-
     }
 
     @Override
@@ -116,11 +115,11 @@ public class VerticalScaleScrollView extends BaseScaleView {
                 return true;
             case MotionEvent.ACTION_MOVE:
                 int dataY = mScrollLastX - y;
-                if (mCountScale - mTempScale < 0) { //向下边滑动
-                    if (mCountScale <= mMin && dataY <= 0) //禁止继续向下滑动
+                if (mCountScale - mTempScale < 0) {         // 向下边滑动
+                    if (mCountScale <= mMin && dataY <= 0)  // 禁止继续向下滑动
                         return super.onTouchEvent(event);
-                } else if (mCountScale - mTempScale > 0) { //向上边滑动
-                    if (mCountScale >= mMax && dataY >= 0) //禁止继续向上滑动
+                } else if (mCountScale - mTempScale > 0) {  // 向上边滑动
+                    if (mCountScale >= mMax && dataY >= 0)  // 禁止继续向上滑动
                         return super.onTouchEvent(event);
                 }
                 smoothScrollBy(0, dataY);
@@ -132,10 +131,11 @@ public class VerticalScaleScrollView extends BaseScaleView {
                 if (mCountScale < mMin) mCountScale = mMin;
                 if (mCountScale > mMax) mCountScale = mMax;
                 int finalY = (mCountScale - mMidCountScale) * mScaleMargin;
-                mScroller.setFinalY(finalY); //纠正指针位置
+                mScroller.setFinalY(finalY); // 纠正指针位置
                 postInvalidate();
                 return true;
         }
+
         return super.onTouchEvent(event);
     }
 }
