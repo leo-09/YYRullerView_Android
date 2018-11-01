@@ -4,15 +4,19 @@ import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.EditText;
-import android.widget.TextView;
+
+import java.util.ArrayList;
+import java.util.List;
 
 import liyy.hrg.com.yyrullerview.R;
+import liyy.hrg.com.yyrullerview.RullerView.BaseScaleView;
 import liyy.hrg.com.yyrullerview.RullerView.HorizontalScaleScrollView;
-import liyy.hrg.com.yyrullerview.RullerView.VerticalScaleScrollView;
+import liyy.hrg.com.yyrullerview.RullerView.TimeRange;
+//import liyy.hrg.com.yyrullerview.RullerView.VerticalScaleScrollView;
 
 public class MainActivity extends AppCompatActivity {
     EditText mTvHorizontalScale;
-    TextView mTvVerticalScale;
+//    TextView mTvVerticalScale;
     HorizontalScaleScrollView scaleScrollView;
 
     @Override
@@ -25,10 +29,31 @@ public class MainActivity extends AppCompatActivity {
         scaleScrollView = (HorizontalScaleScrollView) findViewById(R.id.horizontalScale);
         scaleScrollView.setOnScrollListener(new HorizontalScaleScrollView.OnScrollListener() {
             @Override
-            public void onScaleScroll(int scale) {
+            public void onScaleScroll(double scale) {
                 mTvHorizontalScale.setText("" + scale);
             }
+
+            @Override
+            public void touchBegin() {
+
+            }
+
+            @Override
+            public void touchEnd() {
+
+            }
         });
+
+        List<TimeRange> ranges = new ArrayList<>();
+        for (int i = 0; i < 10; i ++) {
+            TimeRange r = new TimeRange();
+            r.start = (i * 10) * 60;
+            r.duration = 5 * 60;
+
+            ranges.add(r);
+        }
+
+        scaleScrollView.setRanges(ranges);
 
         findViewById(R.id.horizontalScaleValueBtn).setOnClickListener(new View.OnClickListener() {
             @Override
@@ -38,14 +63,14 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        mTvVerticalScale = (TextView) findViewById(R.id.verticalScaleValue);
-
-        VerticalScaleScrollView vScaleScrollView = (VerticalScaleScrollView) findViewById(R.id.verticalScale);
-        vScaleScrollView.setOnScrollListener(new HorizontalScaleScrollView.OnScrollListener() {
-            @Override
-            public void onScaleScroll(int scale) {
-                mTvVerticalScale.setText("" + scale);
-            }
-        });
+//        mTvVerticalScale = (TextView) findViewById(R.id.verticalScaleValue);
+//
+//        VerticalScaleScrollView vScaleScrollView = (VerticalScaleScrollView) findViewById(R.id.verticalScale);
+//        vScaleScrollView.setOnScrollListener(new HorizontalScaleScrollView.OnScrollListener() {
+//            @Override
+//            public void onScaleScroll(int scale) {
+//                mTvVerticalScale.setText("" + scale);
+//            }
+//        });
     }
 }

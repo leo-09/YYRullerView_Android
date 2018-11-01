@@ -4,6 +4,7 @@ import android.content.Context;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
+import android.graphics.Rect;
 import android.util.AttributeSet;
 import android.view.MotionEvent;
 import android.view.ViewGroup;
@@ -31,41 +32,76 @@ public class HorizontalScaleScrollView extends BaseScaleView {
 
     @Override
     protected void initVar() {
-        mRectWidth = (mMax - mMin) * mScaleMargin;
+        mRectWidth = (maxSecond - minSecond) * secondScaleMargin;
         mRectHeight = mScaleHeight * 8;
         mScaleMaxHeight = mScaleHeight * 2;
 
         // 设置layoutParams
-        ViewGroup.MarginLayoutParams lp = new ViewGroup.MarginLayoutParams(mRectWidth, mRectHeight);
+        ViewGroup.MarginLayoutParams lp = new ViewGroup.MarginLayoutParams((int)mRectWidth, (int)mRectHeight);
         this.setLayoutParams(lp);
     }
 
     @Override
     protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
-        int height = MeasureSpec.makeMeasureSpec(mRectHeight, MeasureSpec.AT_MOST);
+        int height = MeasureSpec.makeMeasureSpec((int)mRectHeight, MeasureSpec.AT_MOST);
         super.onMeasure(widthMeasureSpec, height);
+
         mScaleScrollViewRange = getMeasuredWidth();
-        mTempScale = mScaleScrollViewRange / mScaleMargin / 2 + mMin;
-        mMidCountScale = mScaleScrollViewRange / mScaleMargin / 2 + mMin;
+        mTempScale = mScaleScrollViewRange / secondScaleMargin / 2 + minSecond;
+        mMidCountScale = mScaleScrollViewRange / secondScaleMargin / 2 + minSecond;
     }
 
     @Override
     protected void onDrawLine(Canvas canvas, Paint paint) {
-        canvas.drawLine(0, mRectHeight, mRectWidth, mRectHeight, paint);
+        canvas.drawLine(0, (float) mRectHeight, (float)mRectWidth, (float)mRectHeight, paint);
+    }
+
+    @Override
+    protected void drawTimeRange(Canvas canvas, Paint paint) {
+        if (getRanges() == null) {
+            return;
+        }
+
+        paint.setStyle(Paint.Style.FILL);
+        paint.setColor(Color.BLUE);//colorTheme
+
+        for (TimeRange range : getRanges()) {
+            Rect rect = new Rect((int)(range.start * secondScaleMargin),
+                    (int) mRectHeight - 10,
+                    (int)((range.start + range.duration) * secondScaleMargin),
+                    (int) mRectHeight);
+            canvas.drawRect(rect, paint);
+        }
+
+        paint.setColor(Color.GRAY);
     }
 
     @Override
     protected void onDrawScale(Canvas canvas, Paint paint) {
-        paint.setTextSize(mRectHeight / 4);
+        paint.setTextSize((float)mRectHeight / 5);
 
-        for (int i = 0, k = mMin; i <= mMax - mMin; i++) {
-            if (i % 10 == 0) { //整值
-                canvas.drawLine(i * mScaleMargin, mRectHeight, i * mScaleMargin, mRectHeight - mScaleMaxHeight, paint);
-                //整值文字
-                canvas.drawText(String.valueOf(k), i * mScaleMargin, mRectHeight - mScaleMaxHeight - 20, paint);
-                k += 10;
-            } else {
-                canvas.drawLine(i * mScaleMargin, mRectHeight, i * mScaleMargin, mRectHeight - mScaleHeight, paint);
+        int fiveMinute = 60 * 5;
+        int oneMinute = 60 * 1;
+
+        for (int i = 0; i <= maxSecond - minSecond; i+=oneMinute) {
+            if (i % fiveMinute == 0) { // 每5分钟
+                canvas.drawLine((float)(i * secondScaleMargin),
+                        (float)mRectHeight,
+                        (float)(i * secondScaleMargin),
+                        (float)(mRectHeight - mScaleMaxHeight),
+                        paint);
+
+                // 整值文字
+                canvas.drawText(secToTime(i),
+                        (float)(i * secondScaleMargin),
+                        (float)(mRectHeight - mScaleMaxHeight - 20),
+                        paint);
+            } else if (i % oneMinute == 0) { // 每分钟
+                canvas.drawLine((float) (i * secondScaleMargin),
+                        (float) mRectHeight,
+                        (float) (i * secondScaleMargin),
+                        (float) (mRectHeight - mScaleHeight),
+                        paint);
             }
         }
     }
@@ -75,26 +111,30 @@ public class HorizontalScaleScrollView extends BaseScaleView {
         paint.setColor(Color.RED);
 
         // 每一屏幕刻度的个数/2
-        int countScale = mScaleScrollViewRange / mScaleMargin / 2;
+        double countScale = mScaleScrollViewRange / secondScaleMargin / 2;
         // 根据滑动的距离，计算指针的位置【指针始终位于屏幕中间】
         int finalX = mScroller.getFinalX();
         // 滑动的刻度（四舍五入取整）
-        int tmpCountScale = (int) Math.rint((double) finalX / (double) mScaleMargin);
+        int tmpCountScale = (int) Math.rint((double) finalX / (double) secondScaleMargin);
         // 总刻度
-        mCountScale = tmpCountScale + countScale + mMin;
+        mCountScale = tmpCountScale + countScale + minSecond;
         if (mScrollListener != null) { // 回调方法
             mScrollListener.onScaleScroll(mCountScale);
         }
-        canvas.drawLine(countScale * mScaleMargin + finalX, mRectHeight,
-                countScale * mScaleMargin + finalX, mRectHeight - mScaleMaxHeight - mScaleHeight, paint);
+        canvas.drawLine((float)(countScale * secondScaleMargin + finalX),
+                        (float) mRectHeight,
+                        (float)(countScale * secondScaleMargin + finalX),
+                        (float)(mRectHeight - mScaleMaxHeight - mScaleHeight),
+                        paint);
     }
 
     @Override
-    public void scrollToScale(int val) {
-        if (val < mMin || val > mMax) {
+    public void scrollToScale(int second) {
+        if (second < minSecond || second > maxSecond) {
             return;
         }
-        int dx = (val - mCountScale) * mScaleMargin;
+
+        double dx = (second - mCountScale) * secondScaleMargin;
         smoothScrollBy(dx, 0);
     }
 
@@ -107,14 +147,19 @@ public class HorizontalScaleScrollView extends BaseScaleView {
                     mScroller.abortAnimation();
                 }
                 mScrollLastX = x;
+
+                if (mScrollListener != null) { // 回调方法
+                    mScrollListener.touchBegin();
+                }
+
                 return true;
             case MotionEvent.ACTION_MOVE:
-                int dataX = mScrollLastX - x;
+                double dataX = mScrollLastX - x;
                 if (mCountScale - mTempScale < 0) {         // 向右边滑动
-                    if (mCountScale <= mMin && dataX <= 0)  // 禁止继续向右滑动
+                    if (mCountScale <= minSecond && dataX <= 0)  // 禁止继续向右滑动
                         return super.onTouchEvent(event);
                 } else if (mCountScale - mTempScale > 0) {  // 向左边滑动
-                    if (mCountScale >= mMax && dataX >= 0)  // 禁止继续向左滑动
+                    if (mCountScale >= maxSecond && dataX >= 0)  // 禁止继续向左滑动
                         return super.onTouchEvent(event);
                 }
                 smoothScrollBy(dataX, 0);
@@ -123,14 +168,55 @@ public class HorizontalScaleScrollView extends BaseScaleView {
                 mTempScale = mCountScale;
                 return true;
             case MotionEvent.ACTION_UP:
-                if (mCountScale < mMin) mCountScale = mMin;
-                if (mCountScale > mMax) mCountScale = mMax;
-                int finalX = (mCountScale - mMidCountScale) * mScaleMargin;
-                mScroller.setFinalX(finalX); // 纠正指针位置
+                if (mCountScale < minSecond) {
+                    mCountScale = minSecond;
+                }
+
+                if (mCountScale > maxSecond) {
+                    mCountScale = maxSecond;
+                }
+
+                double finalX = (mCountScale - mMidCountScale) * secondScaleMargin;
+                mScroller.setFinalX((int)finalX); // 纠正指针位置
                 postInvalidate();
+
+                if (mScrollListener != null) { // 回调方法
+                    mScrollListener.touchEnd();
+                }
+
                 return true;
         }
 
         return super.onTouchEvent(event);
+    }
+
+    private String secToTime(int time) {
+        String timeStr;
+        int hour, minute;
+
+        if (time <= 0)
+            return "00:00";
+        else {
+            minute = time / 60;
+            if (minute < 60) {
+                timeStr = "00:" + unitFormat(minute);
+            } else {
+                hour = minute / 60;
+                if (hour > 99)
+                    return "23:55";
+                minute = minute % 60;
+                timeStr = unitFormat(hour) + ":" + unitFormat(minute);
+            }
+        }
+        return timeStr;
+    }
+
+    private String unitFormat(int i) {
+        String retStr;
+        if (i >= 0 && i < 10)
+            retStr = "0" + Integer.toString(i);
+        else
+            retStr = "" + i;
+        return retStr;
     }
 }

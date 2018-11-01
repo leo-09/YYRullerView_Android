@@ -34,41 +34,47 @@ public class VerticalScaleScrollView extends BaseScaleView {
 
     @Override
     protected void initVar() {
-        mRectHeight = (mMax - mMin) * mScaleMargin;
-        mRectWidth = mScaleHeight * 8;
+        mRectWidth = (maxSecond - minSecond) * secondScaleMargin;
+        mRectHeight = mScaleHeight * 8;
         mScaleMaxHeight = mScaleHeight * 2;
 
         // 设置layoutParams
-        ViewGroup.MarginLayoutParams lp = new ViewGroup.MarginLayoutParams(mRectWidth, mRectHeight);
+        ViewGroup.MarginLayoutParams lp = new ViewGroup.MarginLayoutParams((int)mRectWidth, (int)mRectHeight);
         this.setLayoutParams(lp);
     }
 
     @Override
     protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
-//        int width = MeasureSpec.makeMeasureSpec(mRectWidth, MeasureSpec.AT_MOST);
-        super.onMeasure(widthMeasureSpec, heightMeasureSpec);
-        mScaleScrollViewRange = getMeasuredHeight();
-        mTempScale = mScaleScrollViewRange / mScaleMargin / 2 + mMin;
-        mMidCountScale = mScaleScrollViewRange / mScaleMargin / 2 + mMin;
+        int height = MeasureSpec.makeMeasureSpec((int)mRectHeight, MeasureSpec.AT_MOST);
+        super.onMeasure(widthMeasureSpec, height);
+
+        mScaleScrollViewRange = getMeasuredWidth();
+        mTempScale = mScaleScrollViewRange / secondScaleMargin / 2 + minSecond;
+        mMidCountScale = mScaleScrollViewRange / secondScaleMargin / 2 + minSecond;
     }
 
     @Override
     protected void onDrawLine(Canvas canvas, Paint paint) {
-        canvas.drawLine(0, 0, 0, mRectHeight, paint);
+        canvas.drawLine(0, 0, 0, (int)mRectHeight, paint);
+    }
+
+    @Override
+    protected void drawTimeRange(Canvas canvas, Paint paint) {
+
     }
 
     @Override
     protected void onDrawScale(Canvas canvas, Paint paint) {
-        paint.setTextSize(mRectWidth / 4);
+        paint.setTextSize((float)mRectWidth / 4);
 
-        for (int i = 0, k = mMin; i <= mMax - mMin; i++) {
+        for (int i = 0, k = minSecond; i <= maxSecond - minSecond; i++) {
             if (i % 10 == 0) { // 整值
-                canvas.drawLine(0, i * mScaleMargin, mScaleMaxHeight, i * mScaleMargin, paint);
+                canvas.drawLine(0, (float)(i * secondScaleMargin), (float) mScaleMaxHeight, (float)(i * secondScaleMargin), paint);
                 // 整值文字
-                canvas.drawText(String.valueOf(k), mScaleMaxHeight + 40, i * mScaleMargin + paint.getTextSize() / 3, paint);
+                canvas.drawText(String.valueOf(k), (float)(mScaleMaxHeight + 40), (float)(i * secondScaleMargin + paint.getTextSize() / 3), paint);
                 k += 10;
             } else {
-                canvas.drawLine(0, i * mScaleMargin, mScaleHeight, i * mScaleMargin, paint);
+                canvas.drawLine(0, (float)(i * secondScaleMargin), (float) mScaleHeight, (float)(i * secondScaleMargin), paint);
             }
         }
     }
@@ -79,27 +85,30 @@ public class VerticalScaleScrollView extends BaseScaleView {
         paint.setColor(Color.RED);
 
         // 每一屏幕刻度的个数/2
-        int countScale = mScaleScrollViewRange / mScaleMargin / 2;
+        double countScale = mScaleScrollViewRange / secondScaleMargin / 2;
         // 根据滑动的距离，计算指针的位置【指针始终位于屏幕中间】
         int finalY = mScroller.getFinalY();
         // 滑动的刻度（四舍五入取整）
-        int tmpCountScale = (int) Math.rint((double) finalY / (double) mScaleMargin);
+        int tmpCountScale = (int) Math.rint((double) finalY / (double) secondScaleMargin);
         // 总刻度
-        mCountScale = tmpCountScale + countScale + mMin;
+        mCountScale = tmpCountScale + countScale + minSecond;
         if (mScrollListener != null) { // 回调方法
             mScrollListener.onScaleScroll(mCountScale);
         }
 
-        canvas.drawLine(0, countScale * mScaleMargin + finalY,
-                mScaleMaxHeight + mScaleHeight, countScale * mScaleMargin + finalY, paint);
+        canvas.drawLine(0,
+                (float)(countScale * secondScaleMargin + finalY),
+                (float)(mScaleMaxHeight + mScaleHeight),
+                (float)(countScale * secondScaleMargin + finalY), paint);
     }
 
     @Override
-    public void scrollToScale(int val) {
-        if (val < mMin || val > mMax) {
+    public void scrollToScale(int second) {
+        if (second < minSecond || second > maxSecond) {
             return;
         }
-        int dy = (val - mCountScale) * mScaleMargin;
+
+        double dy = (second - mCountScale) * secondScaleMargin;
         smoothScrollBy(0, dy);
     }
 
@@ -112,14 +121,19 @@ public class VerticalScaleScrollView extends BaseScaleView {
                     mScroller.abortAnimation();
                 }
                 mScrollLastX = y;
+
+                if (mScrollListener != null) { // 回调方法
+                    mScrollListener.touchBegin();
+                }
+
                 return true;
             case MotionEvent.ACTION_MOVE:
-                int dataY = mScrollLastX - y;
+                double dataY = mScrollLastX - y;
                 if (mCountScale - mTempScale < 0) {         // 向下边滑动
-                    if (mCountScale <= mMin && dataY <= 0)  // 禁止继续向下滑动
+                    if (mCountScale <= minSecond && dataY <= 0)  // 禁止继续向下滑动
                         return super.onTouchEvent(event);
                 } else if (mCountScale - mTempScale > 0) {  // 向上边滑动
-                    if (mCountScale >= mMax && dataY >= 0)  // 禁止继续向上滑动
+                    if (mCountScale >= maxSecond && dataY >= 0)  // 禁止继续向上滑动
                         return super.onTouchEvent(event);
                 }
                 smoothScrollBy(0, dataY);
@@ -128,11 +142,17 @@ public class VerticalScaleScrollView extends BaseScaleView {
                 mTempScale = mCountScale;
                 return true;
             case MotionEvent.ACTION_UP:
-                if (mCountScale < mMin) mCountScale = mMin;
-                if (mCountScale > mMax) mCountScale = mMax;
-                int finalY = (mCountScale - mMidCountScale) * mScaleMargin;
-                mScroller.setFinalY(finalY); // 纠正指针位置
+                if (mCountScale < minSecond) mCountScale = minSecond;
+                if (mCountScale > maxSecond) mCountScale = maxSecond;
+
+                double finalY = (mCountScale - mMidCountScale) * secondScaleMargin;
+                mScroller.setFinalY((int)finalY); // 纠正指针位置
                 postInvalidate();
+
+                if (mScrollListener != null) { // 回调方法
+                    mScrollListener.touchEnd();
+                }
+
                 return true;
         }
 

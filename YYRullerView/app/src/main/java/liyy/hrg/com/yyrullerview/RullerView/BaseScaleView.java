@@ -2,59 +2,48 @@ package liyy.hrg.com.yyrullerview.RullerView;
 
 import android.annotation.TargetApi;
 import android.content.Context;
-import android.content.res.TypedArray;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
 import android.os.Build;
-import android.support.annotation.StyleableRes;
 import android.util.AttributeSet;
 import android.view.View;
 import android.widget.Scroller;
 
-import liyy.hrg.com.yyrullerview.R;
+import java.util.List;
 
 /**
  * 可滑动标尺
  * */
 public abstract class BaseScaleView extends View {
 
-    public static final int[] ATTR = {
-            R.attr.lf_scale_view_min,
-            R.attr.lf_scale_view_max,
-            R.attr.lf_scale_view_margin,
-            R.attr.lf_scale_view_height,
-    };
+    protected int maxSecond;         // 最大刻度
+    protected int minSecond;         // 最小刻度
+    protected double mCountScale;  // 滑动的总刻度
 
-    public static final @StyleableRes int LF_SCALE_MIN = 0;
-    public static final @StyleableRes int LF_SCALE_MAX = 1;
-    public static final @StyleableRes int LF_SCALE_MARGIN = 2;
-    public static final @StyleableRes int LF_SCALE_HEIGHT = 3;
-    public static final @StyleableRes int LF_SCALE_CURRENT = 4;
+    protected double mScaleScrollViewRange;
 
-    protected int mMax;         // 最大刻度
-    protected int mMin;         // 最小刻度
-    protected int mCountScale;  // 滑动的总刻度
+    protected double secondScaleMargin;     // 每一秒的刻度间距
+    protected double mScaleHeight;     // 刻度线的高度
+    protected double mScaleMaxHeight;  // 整刻度线高度
 
-    protected int mScaleScrollViewRange;
-
-    protected int mScaleMargin;     // 刻度间距
-    protected int mScaleHeight;     // 刻度线的高度
-    protected int mScaleMaxHeight;  // 整刻度线高度
-
-    protected int mRectWidth;       // 总宽度
-    protected int mRectHeight;      // 高度
+    protected double mRectWidth;       // 总宽度
+    protected double mRectHeight;      // 高度
 
     protected Scroller mScroller;
-    protected int mScrollLastX;
+    protected double mScrollLastX;
 
-    protected int mTempScale;       // 用于判断滑动方向
-    protected int mMidCountScale;   // 中间刻度
+    protected double mTempScale;       // 用于判断滑动方向
+    protected double mMidCountScale;   // 中间刻度
+
+    private List<TimeRange> ranges;
 
     protected OnScrollListener mScrollListener;
 
     public interface OnScrollListener {
-        void onScaleScroll(int scale);
+        void onScaleScroll(double scale);
+        void touchBegin();
+        void touchEnd();
     }
 
     public BaseScaleView(Context context) {
@@ -80,12 +69,10 @@ public abstract class BaseScaleView extends View {
 
     protected void init(AttributeSet attrs) {
         // 获取自定义属性
-        TypedArray ta = getContext().obtainStyledAttributes(attrs, ATTR);
-        mMin = ta.getInteger(LF_SCALE_MIN, 0);
-        mMax = ta.getInteger(LF_SCALE_MAX, 200);
-        mScaleMargin = ta.getDimensionPixelOffset(LF_SCALE_MARGIN, 15);
-        mScaleHeight = ta.getDimensionPixelOffset(LF_SCALE_HEIGHT, 20);
-        ta.recycle();
+        minSecond = 0;
+        maxSecond = 24 * 60 * 60;// 一天的秒数
+        secondScaleMargin = 24.0 / 60.0;
+        mScaleHeight = 20;
 
         mScroller = new Scroller(getContext());
 
@@ -107,6 +94,7 @@ public abstract class BaseScaleView extends View {
         paint.setTextAlign(Paint.Align.CENTER);
 
         onDrawLine(canvas, paint);
+        drawTimeRange(canvas, paint);
         onDrawScale(canvas, paint);     // 画刻度
         onDrawPointer(canvas, paint);   // 画指针
 
@@ -124,12 +112,15 @@ public abstract class BaseScaleView extends View {
     // 画指针
     protected abstract void onDrawPointer(Canvas canvas, Paint paint);
 
-    // 滑动到指定刻度
-    public abstract void scrollToScale(int val);
+    // 高亮某个时间段
+    protected abstract void drawTimeRange(Canvas canvas, Paint paint);
 
-    public void setCurScale(int val) {
-        if (val >= mMin && val <= mMax) {
-            scrollToScale(val);
+    // 滑动到指定刻度
+    public abstract void scrollToScale(int second);
+
+    public void setCurScale(int second) {
+        if (second >= minSecond && second <= maxSecond) {
+            scrollToScale(second);
             postInvalidate();
         }
     }
@@ -140,6 +131,7 @@ public abstract class BaseScaleView extends View {
     @Override
     public void computeScroll() {
         super.computeScroll();
+
         // 判断Scroller是否执行完毕
         if (mScroller.computeScrollOffset()) {
             scrollTo(mScroller.getCurrX(), mScroller.getCurrY());
@@ -148,8 +140,8 @@ public abstract class BaseScaleView extends View {
         }
     }
 
-    public void smoothScrollBy(int dx, int dy) {
-        mScroller.startScroll(mScroller.getFinalX(), mScroller.getFinalY(), dx, dy);
+    public void smoothScrollBy(double dx, double dy) {
+        mScroller.startScroll(mScroller.getFinalX(), mScroller.getFinalY(), (int)dx, (int)dy);
     }
 
     public void smoothScrollTo(int fx, int fy) {
@@ -165,5 +157,15 @@ public abstract class BaseScaleView extends View {
      */
     public void setOnScrollListener(OnScrollListener listener) {
         this.mScrollListener = listener;
+    }
+
+    public List<TimeRange> getRanges() {
+        return ranges;
+    }
+
+    public void setRanges(List<TimeRange> ranges) {
+        this.ranges = ranges;
+
+        postInvalidate();
     }
 }
