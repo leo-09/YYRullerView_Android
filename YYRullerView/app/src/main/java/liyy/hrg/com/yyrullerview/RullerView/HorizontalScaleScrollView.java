@@ -115,12 +115,16 @@ public class HorizontalScaleScrollView extends BaseScaleView {
         // 根据滑动的距离，计算指针的位置【指针始终位于屏幕中间】
         int finalX = mScroller.getFinalX();
         // 滑动的刻度（四舍五入取整）
-        int tmpCountScale = (int) Math.rint((double) finalX / (double) secondScaleMargin);
+        int tmpCountScale = (int) Math.rint((double) finalX / secondScaleMargin);
         // 总刻度
         mCountScale = tmpCountScale + countScale + minSecond;
         if (mScrollListener != null) { // 回调方法
             mScrollListener.onScaleScroll(mCountScale);
         }
+
+        // 整值文字
+        canvas.drawText(secondToTime((int)mCountScale), (float)(countScale * secondScaleMargin + finalX), 30, paint);
+
         canvas.drawLine((float)(countScale * secondScaleMargin + finalX),
                         (float) mRectHeight,
                         (float)(countScale * secondScaleMargin + finalX),
@@ -190,13 +194,22 @@ public class HorizontalScaleScrollView extends BaseScaleView {
         return super.onTouchEvent(event);
     }
 
+    private String secondToTime(int second) {
+        int hours = second / 3600; //转换小时
+        second = second % 3600;     //剩余秒数
+        int minutes = second /60;  //转换分钟
+        second = second % 60;       //剩余秒数
+
+        return unitFormat(hours)+ ":" + unitFormat(minutes)+ ":" + unitFormat(second);
+    }
+
     private String secToTime(int time) {
         String timeStr;
         int hour, minute;
 
-        if (time <= 0)
+        if (time <= 0) {
             return "00:00";
-        else {
+        } else {
             minute = time / 60;
             if (minute < 60) {
                 timeStr = "00:" + unitFormat(minute);

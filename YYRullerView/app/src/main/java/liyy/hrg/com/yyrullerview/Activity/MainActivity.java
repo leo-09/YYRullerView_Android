@@ -9,7 +9,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import liyy.hrg.com.yyrullerview.R;
-import liyy.hrg.com.yyrullerview.RullerView.BaseScaleView;
 import liyy.hrg.com.yyrullerview.RullerView.HorizontalScaleScrollView;
 import liyy.hrg.com.yyrullerview.RullerView.TimeRange;
 //import liyy.hrg.com.yyrullerview.RullerView.VerticalScaleScrollView;
